@@ -1,0 +1,198 @@
+<html>
+
+<head>
+    <meta name="description" content="Una simple web con sistema de login :D">
+    <meta lang="es">
+    <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="/css/example.css">
+
+    <title>Inicio :D</title>
+
+    <script src="http://127.0.0.1:8080/js/headers.js" defer></script>
+
+</head>
+
+<body>
+
+    <header>
+        <button id="inicio" onclick="location.href=`http:/\/127.0.0.1:8080/`">Inicio</button>
+        <button id="login" onclick="location.href=`http:/\/127.0.0.1:8080/login`">Iniciar sesion</button>
+        <button id="register" onclick="location.href=`http:/\/127.0.0.1:8080/register`">Registrarse</button>
+        <button id="config" onclick="location.href=`http:/\/127.0.0.1:8080/config`">configurar perfil</button>
+        <div class="pfp-container" id="pfp-container" hidden>
+            <img id="perfil">
+        </div>
+    </header>
+
+    <section>
+        <p id="saludo">Error: </p>
+        <div>
+            <p id="eUsername">Tu nuevo nombre de usuario</p>
+            <input type="text" id="username">
+        </div>
+        <div>
+            <p id="ePfp">Tu nuevo avatar</p>
+            <input type="file" id="pfp" onchange="pfp(event)">
+        </div>
+        <div>
+            <p id="ePass">Tu contraseña</p>
+            <input type="text" id="pass">
+        </div>
+        <div>
+            <button id="send" onclick="send();">Guardar</button>
+        </div>
+        <div>
+            <button id="logout" onclick="logout();">Cerrar sesion</button>
+        </div>
+    </section>
+
+    <script>
+        var saludo = document.getElementById("saludo");
+        var reader = new FileReader();
+        var img;
+
+        saludo.setAttribute("hidden", true);
+        reader.onload = function (file) {
+            img = file.target.result;
+        };
+
+        function pfp(event) {
+            let file = document.getElementById("pfp").files[0];
+            if (file.name.endsWith(".png") || file.name.endsWith(".jpeg") || file.name.endsWith(".jpg") || file.name.endsWith(".ico")) reader.readAsDataURL(file);
+        };
+
+        function logout() {
+            window.localStorage.removeItem("token");
+            location.href = location.href.replace("/config", "");
+        };
+
+        function send(username = document.getElementById("username").value, avatar = img, pass = document.getElementById("pass").value) {
+            if (!window.localStorage.getItem("token")) return;
+            if (!avatar) {
+
+                fetch("http://127.0.0.1:8080/api/users/@me", {
+                    method: 'PATCH',
+                    headers: {
+                        "content-type": "application/json",
+                        "authorization": "Bearer " + window.localStorage.getItem("token")
+                    },
+                    body: JSON.stringify({ "username": username, "password": pass })
+                })
+                    .then((response) => {
+                        response.json()
+                            .then((json) => {
+                                if (response.ok) {
+                                    location.reload();
+                                } else {
+                                    if (!json.error.field) {
+                                        saludo.innerText += json.error.message;
+                                        saludo.removeAttribute("hidden");
+                                    } else {
+                                        if (json.error.field == "avatar") {
+                                            document.getElementById("ePfp").innerText = "Tu nuevo avatar " + json.error.message;
+                                        } else if (json.error.field == "password") {
+                                            document.getElementById("ePass").innerText = "Tu contraseña " + json.error.message;
+                                        } else if (json.error.field == "username") {
+                                            document.getElementById("eUsername").innerText = "Tu nuevo nombre de usuario " + json.error.message;
+                                        } else {//XD
+                                            saludo.innerText += json.error.message;
+                                            saludo.removeAttribute("hidden");
+                                        };
+                                    };
+                                };
+
+                                if (!!json.redirect) location.href = json.redirect;
+                            })
+                            .catch((e) => {
+                                saludo.innerText += "Algo salio mal, intenta de nuevo mas tarde.";
+                                saludo.removeAttribute("hidden");
+                            });
+                    })
+                    .catch((e) => {
+                        saludo.innerText += "Algo salio mal, intenta de nuevo mas tarde.";
+                        saludo.removeAttribute("hidden");
+                    });
+
+            } else {
+
+                fetch("http://127.0.0.1:8080/api/pfp", {
+                    method: 'POST',
+                    headers: {
+                        "authorization": "Bearer " + window.localStorage.getItem("token"),
+                        "content-type": "image/png"
+                    },
+                    body: avatar
+                })
+                    .then((response) => {
+                        response.json()
+                            .then((json) => {
+                                if (response.ok) {
+                                    let hash = json.data.avatar;
+
+                                    fetch("http://127.0.0.1:8080/api/users/@me", {
+                                        method: 'PATCH',
+                                        headers: {
+                                            "content-type": "application/json",
+                                            "authorization": "Bearer " + window.localStorage.getItem("token")
+                                        },
+                                        body: JSON.stringify({ "username": username, "avatar": hash, "password": pass })
+                                    })
+                                        .then((response) => {
+                                            response.json()
+                                                .then((json) => {
+                                                    if (response.ok) {
+                                                        location.reload();
+                                                    } else {
+                                                        if (!json.error.field) {
+                                                            saludo.innerText += json.error.message;
+                                                            saludo.removeAttribute("hidden");
+                                                        } else {
+                                                            if (json.error.field == "avatar") {
+                                                                document.getElementById("ePfp").innerText = "Tu nuevo avatar " + json.error.message;
+                                                            } else if (json.error.field == "password") {
+                                                                document.getElementById("ePass").innerText = "Tu contraseña " + json.error.message;
+                                                            } else if (json.error.field == "username") {
+                                                                document.getElementById("eUsername").innerText = "Tu nuevo nombre de usuario " + json.error.message;
+                                                            } else {//XD
+                                                                saludo.innerText += json.error.message;
+                                                                saludo.removeAttribute("hidden");
+                                                            };
+                                                        };
+                                                    };
+
+                                                    if (!!json.redirect) location.href = json.redirect;
+                                                })
+                                                .catch((e) => {
+                                                    saludo.innerText += "Algo salio mal, intenta de nuevo mas tarde.";
+                                                    saludo.removeAttribute("hidden");
+                                                });
+                                        })
+                                        .catch((e) => {
+                                            saludo.innerText += "Algo salio mal, intenta de nuevo mas tarde.";
+                                            saludo.removeAttribute("hidden");
+                                        });
+
+                                } else {
+                                    saludo.innerText += json.error.message;
+                                    saludo.removeAttribute("hidden");
+                                };
+
+                                if (!!json.redirect) location.href = json.redirect;
+                            })
+                            .catch((e) => {
+                                saludo.innerText += "Algo salio mal, intenta de nuevo mas tarde.";
+                                saludo.removeAttribute("hidden");
+                            });
+                    })
+                    .catch((e) => {
+                        saludo.innerText += "Algo salio mal, intenta de nuevo mas tarde.";
+                        saludo.removeAttribute("hidden");
+                    });
+
+            };
+        };
+    </script>
+
+</body>
+
+</html>

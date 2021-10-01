@@ -1,0 +1,136 @@
+<html>
+
+<head>
+    <meta name="description" content="Una simple web con sistema de login :D">
+    <meta lang="es">
+    <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="/css/example.css">
+
+    <style>
+        .pfp-container2 {
+
+            /*position: relative;*/
+            margin-left: 16px;
+
+            width: 100px;
+            height: 100px;
+
+            border: 5px;
+            border-style: solid;
+            border-color: #000;
+            border-radius: 50%;
+        }
+
+        #pfp {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 50%;
+        }
+
+        #saludo {
+            font-size: 25px;
+        }
+    </style>
+
+    <title>Inicio :D</title>
+
+    <script src="http://127.0.0.1:8080/js/headers.js" defer></script>
+
+</head>
+
+<body>
+
+    <header>
+        <button id="inicio" onclick="location.href=`http:/\/127.0.0.1:8080/`">Inicio</button>
+        <button id="login" onclick="location.href=`http:/\/127.0.0.1:8080/login`">Iniciar sesion</button>
+        <button id="register" onclick="location.href=`http:/\/127.0.0.1:8080/register`">Registrarse</button>
+        <button id="config" onclick="location.href=`http:/\/127.0.0.1:8080/config`">configurar perfil</button>
+        <div class="pfp-container" id="pfp-container" hidden> 
+            <img id="perfil">
+        </div>
+    </header>
+
+    <section>
+        <p id="saludo">Espere...</p>
+        <div class="pfp-container2" id="pfp-container2" hidden> 
+            <img id="pfp">
+        </div>
+    </section>
+
+    <script>
+        var saludo = document.getElementById("saludo");
+        var pfpContainer2 = document.getElementById("pfp-container");
+        var pfp = document.getElementById("pfp");
+
+        if (!window.localStorage.getItem("token")) {
+            saludo.innerText = "Debes iniciar sesion para ver el perfil de otra persona."
+        } else {
+
+            var usernameInterval = setInterval(() => {
+
+                try {
+                    if (!!data.username) {
+
+                        clearInterval(usernameInterval);
+
+                        let id = location.pathname.split(/\/+/)[2]
+
+                        fetch("http://127.0.0.1:8080/api/users/" + id, {
+                            method: 'GET',
+                            headers: {
+                                "authorization": "Bearer " + window.localStorage.getItem("token")
+                            }
+                        })
+                            .then((response) => {
+                                response.json()
+                                    .then((json) => {
+
+                                        if (response.ok) {
+
+                                            if (data.username == json.data.username) location.href = "http://127.0.0.1:8080/";
+
+                                            let avatar = json.data.avatar;
+                                            if (!avatar) {
+                                                pfp.setAttribute("src", "http://127.0.0.1:8080/images/favicon.ico");
+                                            } else {
+                                                pfp.setAttribute("src", "http://127.0.0.1:8080/images/pfp/" + avatar + ".png");
+                                            };
+
+                                            pfpContainer2.removeAttribute("hidden")
+
+                                            saludo.innerText = "Bienvenido al perfil de " + json.data.username;
+
+                                            if (!!json.redirect) location.href = json.redirect;
+
+                                        } else {
+
+                                            if (response.status == 404) {
+                                                saludo.innerText = "No se encontro al usuario especificado.";
+                                            } else {
+                                                saludo.innerText = "Algo salio mal intente de nuevo mas tarde.";
+                                            };
+
+                                        };
+                                    })
+                                    .catch((error) => {
+                                        saludo.innerText = "Algo salio mal intente de nuevo mas tarde.";
+                                    });
+                            })
+                            .catch((error) => {
+                                saludo.innerText = "Algo salio mal intente de nuevo mas tarde.";
+                            });
+
+
+                    };
+                } catch (e) { };
+
+            }, 100);
+
+        };
+    </script>
+
+</body>
+
+</html>

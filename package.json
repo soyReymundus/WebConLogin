@@ -1,0 +1,27 @@
+{
+  "name": "simpleweb",
+  "version": "1.0.0",
+  "description": "Una pagina web con un sistema simple de registro e inicio de sesion. Esta web contiene opiciones para ver los perfiles de los usuarios y modificar el propio.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soyReymundus/WebConLogin.git"
+  },
+  "author": "Reymundus",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/soyReymundus/WebConLogin/issues"
+  },
+  "homepage": "https://github.com/soyReymundus/WebConLogin#readme",
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "mysql": "^2.18.1",
+    "nodemailer": "^6.6.3",
+    "sha.js": "^2.4.11"
+  }
+}

@@ -1,0 +1,94 @@
+<html>
+
+<head>
+    <meta name="description" content="Una simple web con sistema de login :D">
+    <meta lang="es">
+    <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="/css/example.css">
+
+    <title>Inicia sesion</title>
+
+    <script src="http://127.0.0.1:8080/js/headers.js" defer></script>
+
+</head>
+
+<body>
+
+    <header>
+        <button id="inicio" onclick="location.href=`http:/\/127.0.0.1:8080/`">Inicio</button>
+        <button id="login" onclick="location.href=`http:/\/127.0.0.1:8080/login`">Iniciar sesion</button>
+        <button id="register" onclick="location.href=`http:/\/127.0.0.1:8080/register`">Registrarse</button>
+        <button id="config" onclick="location.href=`http:/\/127.0.0.1:8080/config`">configurar perfil</button>
+        <div class="pfp-container" id="pfp-container" hidden>
+            <img id="perfil">
+        </div>
+    </header>
+
+    <section>
+        <p id="saludo">Error: </p>
+        <div>
+            <p id="eEmail">Correo</p>
+            <input type="text" id="email">
+        </div>
+        <div>
+            <p id="ePass">Contraseña</p>
+            <input type="text" id="pass">
+        </div>
+        <div>
+            <button id="send" onclick="send();">Iniciar Sesion</button>
+        </div>
+    </section>
+
+    <script>
+        var saludo = document.getElementById("saludo");
+        saludo.setAttribute("hidden", true);
+
+        function send(email = document.getElementById("email").value, pass = document.getElementById("pass").value) {
+            if (!!window.localStorage.getItem("token")) return;
+
+            fetch("http://127.0.0.1:8080/api/login", {
+                method: 'POST',
+                headers: {
+                    "content-type": "application/json"
+                },
+                body: JSON.stringify({ "email": email, "password": pass })
+            })
+                .then((response) => {
+                    response.json()
+                        .then((json) => {
+                            if (response.ok) {
+                                window.localStorage.setItem("token", json.data.token);
+                            } else {
+                                if (!json.error.field) {
+                                    saludo.innerText += json.error.message;
+                                    saludo.removeAttribute("hidden");
+                                } else {
+                                    if (json.error.field == "email") {
+                                        document.getElementById("eEmail").innerText = "Correo " + json.error.message;
+                                    } else if (json.error.field == "password") {
+                                        document.getElementById("ePass").innerText = "Contraseña " + json.error.message;
+                                    } else {//XD
+                                        saludo.innerText += json.error.message;
+                                        saludo.removeAttribute("hidden");
+                                    };
+                                };
+                            };
+
+                            if (!!json.redirect) location.href = json.redirect;
+                            
+                        })
+                        .catch((e) => {
+                            saludo.innerText += "Algo salio mal, intenta de nuevo mas tarde.";
+                            saludo.removeAttribute("hidden");
+                        });
+                })
+                .catch((e) => {
+                    saludo.innerText += "Algo salio mal, intenta de nuevo mas tarde.";
+                    saludo.removeAttribute("hidden");
+                });
+        };
+    </script>
+
+</body>
+
+</html>
